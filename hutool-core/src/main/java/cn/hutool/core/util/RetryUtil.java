@@ -1,5 +1,6 @@
 package cn.hutool.core.util;
 
+import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -46,4 +47,44 @@ public class RetryUtil {
             }
         }
     }
+
+	/**
+	 * 运行并获取运行结果
+	 * @param retryCount 重试次数,默认不重试.
+	 * @param retryInterval 重试间隔,默认无间隔
+	 * @param timeUnit 间隔时间单位,默认秒
+	 * @param runnable 运行体,不能为null
+	 */
+	public static <T> T get(Integer retryCount, Long retryInterval, TimeUnit timeUnit, Callable<T> runnable) {
+		if (retryCount == null || retryCount < 0) {
+			retryCount = 0;
+		}
+		if (retryInterval == null || retryInterval < 0L) {
+			retryInterval = 0L;
+		}
+		if (timeUnit == null) {
+			timeUnit = TimeUnit.SECONDS;
+		}
+		if (runnable == null) {
+			throw new IllegalArgumentException("运行体不能为null");
+		}
+		int count = 0;
+		while (count <= retryCount) {
+			try {
+				return runnable.call();
+			} catch (Exception e) {
+				count++;
+				if (count >= retryCount) {
+					throw new RuntimeException(e);
+				} else {
+					try {
+						timeUnit.sleep(retryInterval);
+					} catch (InterruptedException ex) {
+						break;
+					}
+				}
+			}
+		}
+		return null;
+	}
 }

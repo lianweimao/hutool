@@ -21,4 +21,12 @@ class RetryUtilTest {
 			});
 		});
 	}
+
+	@Test
+	void get() {
+		assertEquals(1,RetryUtil.get(3,1L,TimeUnit.SECONDS,() -> 1));
+		assertThrows(Exception.class,() -> {
+			RetryUtil.get(0,1L, TimeUnit.SECONDS,()-> 1 / 0);
+		});
+	}
 }
